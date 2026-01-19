@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Ram Arora",
+    "role": "STE",
+    "organization": "Siemens",
+    "imageUrl": "https://example.com/ram.jpg"
+  },
+  {
+    "name": "Aditya Dixit",
+    "role": "Software Engineer",
+    "organization": "Techentiaa",
+    "imageUrl": "https://example.com/aditya.jpg"
+  },
+  {
+    "name": "Kamlesh Yadav",
+    "role": "AGM Engineering",
+    "organization": "KEPL",
+    "imageUrl": "https://example.com/kamlesh.jpg"
+  },
+  {
+    "name": "Shalini Singh Raman",
+    "role": "Engineering Manager",
+    "organization": "Capgemini Engineering",
+    "imageUrl": "https://example.com/shalini.jpg"
+  },
+  {
+    "name": "Mamta Rai",
+    "role": "Sr Associate",
+    "organization": "Mott MacDonald",
+    "imageUrl": "https://example.com/mamta.jpg"
+  },
+  {
+    "name": "Divya Upadhyay",
+    "role": "Professor & Head CSE-AI",
+    "organization": "Galgotias College of Engineering & Technology",
+    "imageUrl": "https://example.com/divya.jpg"
+  },
+  {
+    "name": "Vivek Mishra",
+    "role": "Director Product Management - AI/ML",
+    "organization": "Smart Tech",
+    "imageUrl": "https://example.com/vivek.jpg"
+  },
+  {
+    "name": "Anand K Raman",
+    "role": "Director - Data Analytics",
+    "organization": "Gartner",
+    "imageUrl": "https://example.com/anand.jpg"
+  },
+  {
+    "name": "Dr. Ashutosh Mishra",
+    "role": "Assistant Professor",
+    "organization": "Motilal Nehru National Institute of Technology Allahabad",
+    "imageUrl": "https://example.com/ashutosh.jpg"
+  },
+  {
+    "name": "Shashi Agrawal",
+    "role": "Industry Professional",
+    "organization": "Independent",
+    "imageUrl": "https://example.com/shashi.jpg"
+  }
+]

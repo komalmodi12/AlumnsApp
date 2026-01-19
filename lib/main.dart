@@ -4,9 +4,19 @@ import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/login_form_screen.dart';
 import 'features/home/home_screen.dart';
 import 'routes/app_routes.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ScreenUtilInit(
+      designSize: const Size(360, 690), // base design size
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) => const MyApp(),
+    
+
+  ));
 }
 
 class MyApp extends StatelessWidget {
