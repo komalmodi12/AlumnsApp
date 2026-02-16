@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:alumns_app/features/home/widgets/app_layout.dart';
-import 'package:vector_math/vector_math_64.dart' as vmath; // for Vector3
+import 'package:alumns_app/core/api/api_helper.dart';
+import 'package:alumns_app/features/auth/models/api_models.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -12,15 +12,73 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   int _currentIndex = 1;
-  final PageController _pageController = PageController(viewportFraction: 0.8);
-  int _focusedPage = 0;
+  User? _currentUser;
+  bool _isLoading = true;
+  String? _error;
+
+  // Edit form controllers
+  late TextEditingController _nameController;
+  late TextEditingController _phoneController;
+  late TextEditingController _bioController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _phoneController = TextEditingController();
+    _bioController = TextEditingController();
+    _loadUserProfile();
+    context.trackPageView('profile');
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final user = await ApiHelper.getUserProfile(context: context);
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+          _isLoading = false;
+          // Pre-fill form
+          _nameController.text = user?.name ?? '';
+          _phoneController.text = user?.phone ?? '';
+          _bioController.text = user?.bio ?? '';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to load profile';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _updateProfile() async {
+    context.showLoading();
+
+    await ApiHelper.updateProfile(
+      context: context,
+      name: _nameController.text,
+      phone: _phoneController.text,
+      bio: _bioController.text,
+      onSuccess: () {
+        context.closeLoading();
+        context.showSuccess('Profile updated!');
+        _loadUserProfile();
+      },
+      onError: (error) {
+        context.closeLoading();
+        context.showError('Failed to update');
+      },
+    );
+  }
 
   void _onTabSelected(int index) {
     setState(() {
       _currentIndex = index;
     });
 
-    // Navigation logic (replace with your routes)
     if (index == 0) {
       Navigator.pushReplacementNamed(context, '/home');
     } else if (index == 1) {
@@ -37,192 +95,119 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return AppLayout(
-      body: _buildProfileCarousel(),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(_error!),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadUserProfile,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            )
+          : _buildProfileContent(),
       currentIndex: _currentIndex,
       onTabSelected: _onTabSelected,
     );
   }
 
-  Widget _buildProfileCarousel() {
-    final List<String> sections = ["Personal", "Professional", "Education"];
-
-    return SizedBox(
-      height: 600.h,
-      child: PageView.builder(
-        controller: _pageController,
-        itemCount: sections.length,
-        onPageChanged: (index) {
-          setState(() {
-            _focusedPage = index;
-          });
-        },
-        itemBuilder: (context, index) {
-          final bool isFocused = _focusedPage == index;
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            margin: EdgeInsets.symmetric(
-              horizontal: 12.w,
-              vertical: isFocused ? 20.h : 40.h,
+  Widget _buildProfileContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Profile Header
+          Center(
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage: _currentUser?.avatar != null
+                      ? NetworkImage(_currentUser!.avatar!)
+                      : null,
+                  child: _currentUser?.avatar == null
+                      ? const Icon(Icons.person, size: 50)
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _currentUser?.name ?? 'User',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  _currentUser?.email ?? '',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ],
             ),
-            transform: Matrix4.identity()
-              ..scaleByVector3(vmath.Vector3.all(isFocused ? 1.0 : 0.9)),
-            decoration: BoxDecoration(
-              color: const Color(0xFF5C3FCA),
-              borderRadius: BorderRadius.circular(16.r),
-              boxShadow: isFocused
-                  ? [
-                      const BoxShadow(
-                        color: Colors.black26, // ✅ fixed
-                        blurRadius: 12,
-                        spreadRadius: 2,
-                        offset: Offset(0, 6),
-                      ),
-                    ]
-                  : [],
-            ),
-            child: Padding(
-              padding: EdgeInsets.all(16.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        sections[index],
-                        style: TextStyle(
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.white),
-                        onPressed: () {
-                          // For example, open a dialog or navigate to a detailed edit page
-                          debugPrint("Edit ${sections[index]} section");
-                        },
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16.h),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: _buildSectionFields(sections[index]),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 20.h),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 40.w,
-                        vertical: 12.h,
-                      ),
-                    ),
-                    onPressed: () {
-                      // Save logic here
-                    },
-                    child: Text(
-                      "Save",
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        color: const Color(0xFF5C3FCA),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+          ),
+          const SizedBox(height: 32),
+          // Edit Form
+          TextField(
+            controller: _nameController,
+            decoration: InputDecoration(
+              labelText: 'Name',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
-          );
-        },
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _phoneController,
+            decoration: InputDecoration(
+              labelText: 'Phone',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _bioController,
+            decoration: InputDecoration(
+              labelText: 'Bio',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            maxLines: 3,
+          ),
+          const SizedBox(height: 24),
+          // Update Button
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF5C3FCA),
+              ),
+              onPressed: _updateProfile,
+              child: const Text(
+                'Update Profile',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  List<Widget> _buildSectionFields(String section) {
-    switch (section) {
-      case "Personal":
-        return [
-          _buildTextField("First Name"),
-          _buildTextField("Last Name"),
-          _buildTextField("Email"),
-          _buildTextField("Mobile"),
-          _buildTextField("Date of Birth"),
-          _buildTextField("Gender"),
-          _buildTextField("Brief Introduction", maxLines: 2),
-          _buildTextField("About Me", maxLines: 3),
-          _buildTextField("Country"),
-          _buildTextField("State"),
-          _buildTextField("City"),
-          _buildTextField("Street"),
-          _buildTextField("Pincode"),
-          _buildTextField("LinkedIn"),
-          _buildTextField("Instagram"),
-          _buildTextField("Facebook"),
-        ];
-      case "Professional":
-        return [
-          _buildTextField("Company Name"),
-          _buildTextField("Current Employment"), // e.g., Yes/No
-          _buildTextField(
-            "Employment Type",
-          ), // e.g., Full-time, Part-time, Contract
-          _buildTextField("Designation"),
-          _buildTextField("Country"),
-          _buildTextField("State"),
-          _buildTextField("City"),
-          _buildTextField("Salary Band"), // explanation below
-          _buildTextField("Start Year"),
-          _buildTextField("End Year"),
-          _buildTextField("Skills", maxLines: 2),
-        ];
-      case "Education":
-        return [
-          _buildTextField("Qualification"), // e.g., Bachelor's, Master's, PhD
-          _buildTextField("Program"), // e.g., B.Tech, MBA
-          _buildTextField(
-            "Specialization",
-          ), // e.g., Computer Science, Marketing
-          _buildTextField(
-            "Program Type",
-          ), // e.g., Full-time, Part-time, Distance
-          _buildTextField("University"),
-          _buildTextField("Institute"),
-          _buildTextField("Start Year"),
-          _buildTextField("Completion Year"),
-          _buildTextField("Country"),
-          _buildTextField("State"),
-          _buildTextField("City"),
-          _buildTextField("Pincode"),
-          _buildTextField("Percentage or CGPA"), // academic performance
-          _buildTextField("Achievements", maxLines: 2),
-        ];
-      default:
-        return [];
-    }
-  }
-
-  Widget _buildTextField(String label, {int maxLines = 1}) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12.h),
-      child: TextField(
-        maxLines: maxLines,
-        style: TextStyle(fontSize: 14.sp),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(fontSize: 14.sp, color: Colors.black),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
-        ),
-      ),
-    );
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _bioController.dispose();
+    super.dispose();
   }
 }

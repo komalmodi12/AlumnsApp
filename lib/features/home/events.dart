@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:alumns_app/features/home/widgets/app_layout.dart';
+import 'package:alumns_app/core/api/api_helper.dart';
 
 class EventsPage extends StatefulWidget {
   const EventsPage({super.key});
@@ -12,6 +13,13 @@ class EventsPage extends StatefulWidget {
 class _EventsPageState extends State<EventsPage> {
   int _currentIndex = 2; // Events tab index
   int _selectedTab = 0; // 0=All, 1=Posted, 2=Attending, 3=Invites
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    context.trackPageView('events');
+  }
 
   void _onTabSelected(int index) {
     setState(() {
@@ -48,26 +56,51 @@ class _EventsPageState extends State<EventsPage> {
       "Event Invites",
     ];
 
-    final List<Map<String, String>> events = [
+    // Sample event data - Replace with API call when available
+    final List<Map<String, dynamic>> events = [
       {
-        "code": "CONF000001",
-        "title": "Alumni Meet 2025 – NIT Allahabad",
-        "type": "CONFERENCE",
-        "start": "11/18/23 4:00 PM",
+        "id": "EVT001",
+        "title": "Annual Alumni Meet 2026",
+        "date": "March 15, 2026",
+        "time": "6:00 PM - 9:00 PM",
+        "location": "Grand Ballroom, Downtown",
+        "description":
+            "Join us for an evening of networking with fellow alumni",
+        "attendees": 150,
       },
       {
-        "code": "ALUM000001",
-        "title": "Interaction",
-        "type": "OTHER",
-        "start": "9/19/23 11:00 AM",
+        "id": "EVT002",
+        "title": "Tech Workshop Series",
+        "date": "March 20, 2026",
+        "time": "10:00 AM - 12:00 PM",
+        "location": "Virtual Event",
+        "description":
+            "Learn about latest technologies and career opportunities",
+        "attendees": 85,
       },
       {
-        "code": "MEET000001",
-        "title": "IIM Lucknow – 12th Batch meet at Noida Campus",
-        "type": "MEETUP",
-        "start": "8/2/23 10:00 AM",
+        "id": "EVT003",
+        "title": "Sports Day Championship",
+        "date": "April 5, 2026",
+        "time": "9:00 AM - 5:00 PM",
+        "location": "University Sports Complex",
+        "description": "Compete with your peers in various sports activities",
+        "attendees": 200,
       },
     ];
+
+    // Filter events based on search query
+    final filteredEvents = events
+        .where(
+          (event) =>
+              event['title'].toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              ) ||
+              event['location'].toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              ),
+        )
+        .toList();
 
     return Column(
       children: [
@@ -122,11 +155,16 @@ class _EventsPageState extends State<EventsPage> {
             children: [
               Expanded(
                 child: TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
                   style: TextStyle(fontSize: 14.sp),
                   decoration: InputDecoration(
-                    hintText: "Search Events",
+                    hintText: "Search events...",
                     hintStyle: TextStyle(fontSize: 14.sp),
-                    prefixIcon: Icon(Icons.search, color: Colors.grey),
+                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: EdgeInsets.symmetric(
@@ -164,74 +202,143 @@ class _EventsPageState extends State<EventsPage> {
 
         // Event Table
         Expanded(
-          child: ListView.builder(
-            itemCount: events.length,
-            itemBuilder: (context, index) {
-              final event = events[index];
-              return Container(
-                margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Event Code
-                    Text(
-                      "Event Code: ${event['code']}",
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF5C3FCA),
+          child: filteredEvents.isEmpty
+              ? const Center(
+                  child: Text('No events found matching your search'),
+                )
+              : ListView.builder(
+                  itemCount: filteredEvents.length,
+                  itemBuilder: (context, index) {
+                    final event = filteredEvents[index];
+                    return Container(
+                      margin: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 8.h,
                       ),
-                    ),
-                    SizedBox(height: 6.h),
-
-                    // Event Title
-                    Text(
-                      event['title']!,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
-                    ),
-                    SizedBox(height: 6.h),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Event ID
+                          Text(
+                            "Event ID: ${event['id']}",
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF5C3FCA),
+                            ),
+                          ),
+                          SizedBox(height: 6.h),
 
-                    // Type + Start Date
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Type: ${event['type']}",
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: Colors.grey.shade700,
+                          // Event Title
+                          Text(
+                            event['title'],
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
                           ),
-                        ),
-                        Text(
-                          "Start: ${event['start']}",
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: Colors.grey.shade700,
+                          SizedBox(height: 6.h),
+
+                          // Date & Time
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "📅 ${event['date']}",
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              Text(
+                                "🕐 ${event['time']}",
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          SizedBox(height: 8.h),
+
+                          // Location
+                          Text(
+                            "📍 ${event['location']}",
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+
+                          // Description
+                          Text(
+                            event['description'],
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: Colors.grey.shade600,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 8.h),
+
+                          // Attendees Count
+                          Row(
+                            children: [
+                              const Icon(Icons.people, size: 16, color: Colors.grey),
+                              SizedBox(width: 4.w),
+                              Text(
+                                "${event['attendees']} attending",
+                                style: TextStyle(
+                                  fontSize: 13.sp,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 12.h),
+
+                          // Action Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF5C3FCA),
+                              ),
+                              onPressed: () {
+                                
+                                context.showSuccess('Event details coming soon');
+
+                                context.showSuccess('Event marked as attending');
+                              },
+                              child: Text(
+                                'Mark As Attending',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ),
       ],
     );
