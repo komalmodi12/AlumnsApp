@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:alumns_app/features/home/widgets/app_layout.dart';
-import 'package:alumns_app/core/api/api_helper.dart';
 
 class JobPage extends StatefulWidget {
   const JobPage({super.key});
@@ -13,13 +12,6 @@ class JobPage extends StatefulWidget {
 class _JobPageState extends State<JobPage> {
   int _currentIndex = 3; // Jobs tab index
   int _selectedTab = 0; // 0=All, 1=Applied, 2=Posted
-  String _searchQuery = '';
-
-  @override
-  void initState() {
-    super.initState();
-    context.trackPageView('jobs');
-  }
 
   void _onTabSelected(int index) {
     setState(() {
@@ -35,7 +27,7 @@ class _JobPageState extends State<JobPage> {
     } else if (index == 3) {
       // Already on Jobs
     } else if (index == 4) {
-      Navigator.pushReplacementNamed(context, '/circle');
+      Navigator.pushReplacementNamed(context, '/memory');
     }
   }
 
@@ -51,49 +43,26 @@ class _JobPageState extends State<JobPage> {
   Widget _buildJobsBody() {
     final List<String> tabs = ["All Jobs", "Applied Jobs", "Posted Jobs"];
 
-    // Sample job data - Replace with API call when available
     final List<Map<String, String>> jobs = [
       {
         "id": "JOB920e",
-        "position": "Senior Software Engineer",
-        "company": "Tech Solutions Inc",
-        "location": "New York, NY",
+        "position": "SDE",
+        "company": "Alitreya Tech Solution",
+        "location": "Prayagraj",
       },
       {
         "id": "JOBa5f5",
-        "position": "Product Manager",
-        "company": "Digital Innovations",
-        "location": "San Francisco, CA",
+        "position": "Sales Executive",
+        "company": "HDFC Bank",
+        "location": "Allahabad",
       },
       {
         "id": "JOB2b2z",
-        "position": "UX Designer",
-        "company": "Creative Studio",
-        "location": "Austin, TX",
-      },
-      {
-        "id": "JOB3c3x",
-        "position": "Data Scientist",
-        "company": "Analytics Pro",
-        "location": "Boston, MA",
+        "position": "SDE",
+        "company": "Alitreya Tech Solution",
+        "location": "Prayagraj",
       },
     ];
-
-    // Filter jobs based on search query
-    final filteredJobs = jobs
-        .where(
-          (job) =>
-              job['position']!.toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ) ||
-              job['company']!.toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ) ||
-              job['location']!.toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ),
-        )
-        .toList();
 
     return Column(
       children: [
@@ -148,16 +117,11 @@ class _JobPageState extends State<JobPage> {
             children: [
               Expanded(
                 child: TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
                   style: TextStyle(fontSize: 14.sp),
                   decoration: InputDecoration(
-                    hintText: "Search jobs...",
+                    hintText: "Search by job title, company, location, etc.",
                     hintStyle: TextStyle(fontSize: 14.sp),
-                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                    prefixIcon: Icon(Icons.search, color: Colors.grey),
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: EdgeInsets.symmetric(
@@ -195,79 +159,74 @@ class _JobPageState extends State<JobPage> {
 
         // ✅ Job Table
         Expanded(
-          child: filteredJobs.isEmpty
-              ? const Center(child: Text('No jobs found matching your search'))
-              : ListView.builder(
-                  itemCount: filteredJobs.length,
-                  itemBuilder: (context, index) {
-                    final job = jobs[index];
-                    return Container(
-                      margin: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 8.h,
-                      ),
-                      padding: EdgeInsets.all(12.w),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Job ID
-                          Text(
-                            "Job ID: ${job['id']}",
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF5C3FCA),
-                            ),
-                          ),
-                          SizedBox(height: 6.h),
-
-                          // Position
-                          Text(
-                            "Position: ${job['position']}",
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          SizedBox(height: 6.h),
-
-                          // Company + Location
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Company: ${job['company']}",
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
-                              Text(
-                                "Location: ${job['location']}",
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+          child: ListView.builder(
+            itemCount: jobs.length,
+            itemBuilder: (context, index) {
+              final job = jobs[index];
+              return Container(
+                margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Job ID
+                    Text(
+                      "Job ID: ${job['id']}",
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF5C3FCA),
+                      ),
+                    ),
+                    SizedBox(height: 6.h),
+
+                    // Position
+                    Text(
+                      "Position: ${job['position']}",
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    SizedBox(height: 6.h),
+
+                    // Company + Location
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Company: ${job['company']}",
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                        Text(
+                          "Location: ${job['location']}",
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
 
         // ✅ Pagination
@@ -283,7 +242,9 @@ class _JobPageState extends State<JobPage> {
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  
+                },
                 child: Text(
                   "Previous",
                   style: TextStyle(fontSize: 14.sp, color: Colors.black87),
@@ -296,7 +257,9 @@ class _JobPageState extends State<JobPage> {
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  
+                },
                 child: Text(
                   "Next",
                   style: TextStyle(fontSize: 14.sp, color: Colors.white),

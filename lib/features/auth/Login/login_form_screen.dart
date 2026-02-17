@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:alumns_app/core/api/api_helper.dart';
+import '../data/auth_repository.dart';
 import '../../../routes/app_routes.dart';
 
 class LoginFormScreen extends StatefulWidget {
@@ -13,6 +13,7 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _idController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _repo = AuthRepository();
   bool _loading = false;
   String? _error;
 
@@ -275,26 +276,10 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
       _error = null;
     });
 
-    final email = _idController.text.trim();
+    final id = _idController.text.trim();
     final password = _passwordController.text;
 
-    await ApiHelper.performLogin(
-      context: context,
-      email: email,
-      password: password,
-      onSuccess: () {
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, AppRoutes.home);
-        }
-      },
-      onError: (error) {
-        if (mounted) {
-          setState(() {
-            _error = error.message;
-          });
-        }
-      },
-    );
+    final success = await _repo.login(id: id, password: password);
 
     if (!mounted) {
       return;
@@ -303,6 +288,14 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
     setState(() {
       _loading = false;
     });
+
+    if (success) {
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } else {
+      setState(() {
+        _error = 'Login failed. Check your credentials.';
+      });
+    }
   }
 
   Future<void> _handleGoogle() async {

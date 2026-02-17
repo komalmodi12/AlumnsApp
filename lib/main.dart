@@ -8,11 +8,8 @@ import 'features/home/home_screen.dart';
 import 'features/home/recommended_page.dart';
 import 'features/home/logout.dart'; // ✅ added logout
 import 'routes/app_routes.dart';
-import 'core/api/api_service_manager.dart'; // ✅ Import API Service
 
 void main() {
-  // ✅ Initialize API Service with QA endpoint
-  ApiService.initialize(useQa: true);
   runApp(const MyApp());
 }
 
